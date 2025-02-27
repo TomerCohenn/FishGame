@@ -1,1408 +1,390 @@
 $(document).ready(function() {
-    //Initial Experiment Parameters
-  
-    
-    var ThisMobile=0;
-var md=new MobileDetect(window.navigator.userAgent)
-   if(md.mobile()){
-       ThisMobile=1;
-       console.log('phone');
-       
-   }
+    // Initial Experiment Parameters
+    var ThisMobile = 0;
+    var md = new MobileDetect(window.navigator.userAgent);
+    if (md.mobile()) {
+        ThisMobile = 1;
+        console.log('phone');
+    }
 
-    var NumTrials = 20;//25 //5//15;
-//var NumTrialsEnd = 12;
-    
-    var NumBlocks = 3;
-    
-    
-     
-    var p_fish_lake_1 = 0.75//0.65
-    var p_fish_lake_2 = 0.25//0.35
-    
-    
-    var LakeImage = ["Lake01","Lake02","Lake03","Lake04","Lake05","Lake06","Lake07","Lake08"];
-    var LakeName = ["כוכב","עפיפון","בייגל","טרק","פקמן","בוטן","לב","פאזל"];
-  
-    var LakeOrder=[0,1,2,3,4,5,6,7];
-    
-    LakeOrder=Shuffle(LakeOrder);
-  
-    var BlockOrder=[0,1,2];
-    var RandPos=[1,1,0,0];
-        RandPos=Shuffle(RandPos);
+    var NumTrials = 20; // Number of trials per block
+    var NumBlocks = 6; // Total number of blocks
+    var TotalRewards = 0;  // Cumulative rewards for Blocks 1, 2, and 3
+    var TotalAttempts = 0; // Cumulative attempts for Blocks 1, 2, and 3
+    var TrialCounter = 0; // Tracks total trials across blocks
+    var ParticipantResponses = []; // Stores participant's responses to the probability estimates
+    var extraTrialsAdded = false; // Flag to track if extra trials have been added
 
-    BlockOrder=Shuffle(BlockOrder);
-    
-    
 
-    
+    // Probabilities for lakes in each dyad
+    var Dyad1_Probabilities = [
+        [0.8, 0.2], // Block 1
+        [0.8, 0.2], // Block 2 
+        [0.8, 0.2],// Block 3
+        [0.2, 0.8],//block 4 (switched)
+        [0.2, 0.8],//block 5
+        [0.2, 0.8]  // Block 6 
+    ];
+
+    var Dyad2_Probabilities = [
+        [0.8, 0.2], // Remains the same across all blocks
+        [0.8, 0.2],
+        [0.8, 0.2],
+        [0.8, 0.2],
+        [0.8, 0.2],
+        [0.8, 0.2]
+    ];
+
+    var LakeImage = ["Lake01", "Lake05", "Lake03", "Lake04"];
+    var LakeName = ["כוכב", "פקמן", "בייגל", "טרק"];
+
+    var TrialSequence = [];
     var SumReward = 0;
-
-    var YouPic = 'images/Av1.png';
-    
-
-
-    
     var Init = (new Date()).getTime();
-
     var SubID = CreateCode();
-    var thisCode='A';
-    var thisContact='NA';
-    // Initial Display Parameters
-   
 
-    var thisHeight = $(document).height() * 0.9;
-    var thisWidth = $(document).width() * 0.9;
-
-    var DispWidth = thisWidth * 5 / 6;
-    console.log(DispWidth)
-    var DispHeight = DispWidth / 2;
-
-    $('#Main').css('min-height', thisHeight);
-   // $('#Main').css('width', thisWidth);
     
-    
-    Survey.StylesManager.applyTheme("bootstrap");
-    
-  Survey.defaultBootstrapCss.navigationButton = 'btn btn-primary';
+    // Show Name Input Page as Instruction Page 1
+function showNameInputPage() {
+    $('#Stage').empty();
+    $('#Stage').html(`
+        <H2 align="center" dir="rtl">ברוכים הבאים לניסוי</H2>
+        <p dir="rtl" align="center">אנא מלא את שמך המלא</p>
+        <input type="text" id="participantName" class="form-control center-block" style="width: 50%; margin: 10px auto;" placeholder="שם מלא">
+        <button id="submitName" class="btn btn-primary center-block" style="margin-top: 20px;">התחל</button>
+        <p id="nameError" class="text-danger" style="display: none; text-align: center;">יש להזין שם לפני ההמשך</p>
+    `);
 
-    var thisHeight = $(document).height() * 0.9;
-   
-    $('#Main').addClass('container')
-    
-    
-    
- 
-   //SurveyPageDetails();
-   Consent();
-     // End();
-     //Block(0);
-
-    //  }
-    //
-    
-    
-    
-    function Information() {
-
- $('#Stage').empty();
-            $('#Bottom').empty();
-        $('#Top').css('height', thisHeight / 20);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-        CreateDiv('Stage', 'TextBoxDiv');
-
-
-        var Html1 = '<div>\n\
- <div class="row">\n\
-            <div class="col-sm-12 text-center">\n\
- <div class="page-header">\n\
-<h2>Welcome to our experiment, it&#39s nice to meet you!</h2><h4>First, some information about the experiment.</h4>\n\
-                </div>\n\
-                 <div class="row">\n\
-                       <div class="col-sm-10 col-sm-offset-1 text-left">\n\
-                                           <p >This study has been approved by the Univeristy of Haifa, Faculty of Social Sciences Research Ethics Committee<br>\n\
-Name, address and contact details of investigators:<br>\n\
-Uri Hertz<br>\n\
-Department of Cognitive Sciences <br>\n\
-University of Haifa<br>\n\
-Haifa, Israel 31905<br>\n\
-uhertz@cog.haifa.ac.il<br>\n\
-<br>\n\
-We invite you to participate in a study titled: "The Fishing Game" which aims to understand people`s behaviour. <br>\n\
-Please carefully consider the information below and discuss it with others if you wish. Please feel free to ask us if there is anything that is not clear or if you would like more information.\n\
-<br>Please note: \n\
-<ul><li>Participation in the research is voluntary, and you do not have to participate in the study. Your refusal to participate will not affect you and will not harm you in any way whatsoever. Even after agreeing to participate in the experiment, you can withdraw at any time and without giving a reason. The payment you get will not be influenced by your decision to withdraw.</li>\n\
-<li>Apart from the effort required to participate in the study, there are no additional costs or obligations.</li>\n\
-<li>All identifying data in the study will be kept confidential and will not be available to anyone other than the research team. Data collected in this experiment may be used for scientific publication and presentations after anonymization and removal of all identifiable details.</li>\n\
-<li>Participants in our experiment must be over 18 years of age, with no substantial neurological or psychiatric disease.</li>\n\
-<li>Participants in our experiment must declare they do not have a learning disability or attention disorder.</li>\n\
-<li>Your participation in the study may make a significant contribution to future research. The study is conducted by the Laboratory of Social Decision Making, School of Psychological Sciences, University of Haifa.  </li></ul>\n\
-                                           </p></div>\n\
-                       </div>\n\
-            </div>\n\
-        </div></div>';
-
-
-
-        $('#TextBoxDiv').html(Html1);
-
-        var Buttons = '<div align="center"><input align="center" type="button"  class="btn btn-primary btn-lg" id="toConsent" value="Next" ></div>';
-        $('#Bottom').html(Buttons);
-
-        $('#toConsent').click(function () {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            Consent();
-        });
-    }
-
-
-    function Consent() {//consent page, there is also an option to add mturk ID to this page
-
-
-        $('#Top').css('height', thisHeight / 20);
-        // $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Html1 = ' <div >\n\
- <div class="row">\n\
-            <div class="col-sm-12 text-center">\n\
- <div class="page-header">\n\
-\n\
-                </div>\n\
-                 <div class="row">\n\
-                       <div class="col-sm-9 col-sm-offset-1 text-right "  dir = "rtl">\n\
-                                           <h3  dir = "rtl">תודה על השתתפותכם במחקר. אנא מלאו את מספר הטלפון שלכם:<br></h3>\n\
-</p>\n\
-<form data-toggle="validator" role="form" id="ConsentForm">\n\
-  <div class="form-group">\n\
- <div class="form-group col-sm-3"></div>\n\
-  <div class="form-group col-sm-6"  dir = "rtl">\n\
-   <label for="CodeBox" class="control-label"  dir = "rtl"><h3>מספר טלפון:</h3></label>\n\
-\n\
-    <input type="text" class="form-control" id="CodeBox" required>\n\
-  </div>\n\
-<div class="form-group col-sm-3"></div>\n\
-</div>\n\
-<div class="form-group col-sm-12" align="center">\n\
-    <button type="submit" class="btn btn-primary btn-lg">המשך</button>\n\
-  </div>\n\
-        </div>\n\
-                       </div>\n\
-            </div>\n\
-        </div></div>';
-
-
-        $('#TextBoxDiv').html(Html1);
-
-
-        var form = document.getElementById('ConsentForm');
-        if (form.attachEvent) {
-            form.attachEvent("submit", processForm);
+    $('#submitName').click(function () {
+        var participantName = $('#participantName').val().trim();
+        if (participantName) {
+            console.log("Participant Name:", participantName);
+            showInstructionsPage2(); // Proceed to Instructions Page 2
         } else {
-            form.addEventListener("submit", processForm);
+            $('#nameError').show(); // Show error message if the input is empty
         }
-
-        function processForm(e) {
-            if (e.preventDefault)
-                e.preventDefault();
-
-            var ThusForm = document.getElementById('ConsentForm');
-            thisCode = ThusForm.elements[0].value;
-            
-console.log( thisCode)
-            $('#TextBoxDiv').remove();
-            $('#CheckAlert').remove();
-            $('#Stage').empty();
-             SurveyPageDetails();
-            $.ajax({
-                type: 'POST',
-                data: {
-                    thisCode: thisCode,
-                    ID: SubID
-                },
-                async: false,
-                url: 'php/CheckSubCode.php',
-                dataType: 'json',
-                success: function (r) {
-                    //alert(r)
-                    if (r[0].ErrorNo > 0) {
-
-                        Duplicate();
-                    } else {
-                        SurveyPageDetails();
-                    };
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
-                }
-            });
-          
-
-            return false;
-        }
-
-
-        $('#ToInformation').click(function () {
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            SurveyPageDetails();
-        });
-    }
-
-
-
-
-
-function SurveyPageDetails(){
-      console.log('SurveyDetails');
- 
-        $('#Top').css('height', thisHeight / 20);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-       // $('#Stage').css('width', DispWidth);
-        $('#Bottom').css('min-height', thisHeight / 20);  
-    
-       
-
-
-    
-    var JsonDetails =  JSON.parse(JSON.stringify(DemogJson));
-       console.log(JsonDetails)
-/*$.ajax({
-    'async': false,
-    'global': false,
-    'url': "jsons/DemogJson.json",
-    'dataType': "json",
-    'success': function (data) {
-        console.log(JsonDetails)
-        JsonDetails = data;
-    }
-});
-    */
-
-    
-    var survey_details = new Survey.Model(JsonDetails);
-   console.log(survey_details)
-    
-$("#Stage").Survey({
-    model: survey_details,
-    onComplete: InsertDemog
-});
-
-    
+    });
 }
-    
-    
-    
-    
-    function InsertDemog(survey) {
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            Instructions(1);
-           //send Ajax request to your web server.
-var Json1=[survey.data]
 
-var csv = ConvertToCSV_quest(Json1)
+// Show Instruction Page 2 (formerly Page 1)
+function showInstructionsPage2() {
+    $('#Stage').empty();
+    $('#Stage').html(`
+        <H2 align="center" dir="rtl">הוראות</H2>
+        <p dir="rtl">ברוכים הבאים למטלת חופשת הדייג!</p>
+        <p dir="rtl">במהלך החופשה תצאו לשש חופשות דייג בנות 20 ימים
+        <p dir="rtl">בכל יום תצטרכו לבחור אגם לדוג בו מבין שני אגמים שונים.</p>
+        <p dir="rtl">המטרה שלכם היא לדוג כמה שיותר דגים.</p>
+        <img src="images/Inst1.png" class="img-responsive center-block" style="max-width: 50%; margin: 20px auto;">
+        <button id="nextPage" class="btn btn-primary center-block">הבא</button>
+    `);
 
-console.log("The results are:" +csv)
-
-      $.ajax({
-                type: 'POST',
-                data: {ID:SubID,Responses:csv},
-                async: false,
-                url: 'php/InsertDemogData.php',
-                dataType: 'json',
-                success: function(r) {
-                    if (r[0].ErrorNo > 0) {
-                        Error();
-                    } else {
-                        console.log('HERE')
-                        $('#Stage').empty();
-                        $('#Bottom').empty();
-                        Instructions(1);
-                    }
-                    ;
-                }, error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
-                }
-            });
-
-    }
-    
-    
-    
-     function ConvertToCSV_quest(objArray) {
-            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-            var str = '';
-
-            for (var i = 0; i < array.length; i++) {
-                var line = '';
-                for (var index in array[i]) {
-                    var num = index.match(/\d+/g);
-                    if (line != '') line += ','
-console.log(num)
-                  
-                    line += array[i][index];
-                  
-                }
-
-                str += line + '\r\n';
-            }
-
-            return line;
-        }
-    
-
-    
-    
-
-    function Instructions(PageNum) {
-
-
-        $('#Top').css('height', thisHeight / 20);
-      $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-        var NumPages = 2;//number of pages
-        var PicHeight = DispWidth / 2;
-
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Title = '<H2 align = "center"  dir = "rtl">הוראות</H2><div class="row"> <div class="row">\n\
-                       <div class="col-sm-10 col-sm-offset-1">';
-
-        switch (PageNum) {
-            case 1:
-                var Info = '<H3  dir = "rtl">ברוכים הבאים למטלת חופשת הדייג. <br> במטלה זו תצאו לשלוש חופשות דיג, בנות 20 ימים.  <br> בכל יום תצטרכו לבחור אגם לדוג בו, מבין שני אגמים.<br>המטרה שלכם היא לדוג כמה שיותר דגים.<br> <h4  dir = "rtl">*אף דג לא נפגע במהלך המטלה או בתכנונה.</h4><br><br>';
-                break;
-            case 2:
-                var Info = '<H3  dir = "rtl">בכל יום תראו האם הצלחתם לדוג דג או שלא.<br> בכל חופשה תבחרו בין שני אגמים חדשים.<br>בהצלחה!<br>';
-//case 3: 
-                
-                break;
-                
-                
-                break;
-                case 3:
-                var Info = '<H3  dir = "rtl">On completion of the task you will receive your completion code, along with the number of fish you caught and your bonus amount.<br><br><br>Good luck!</h3><br><br>';
-            
-                
-                break;
-            default:
-                var Info;
-                break;
-        }
-        ;
-        var ThisImage = '<div align = "center"><img src="images/Inst' + PageNum + '.png"  class="img-responsive center-block"  height="' + PicHeight + '" align="center"><br><br></div></div></div>';
-
-
-        $('#TextBoxDiv').html(Title + Info + ThisImage);
-
-        var Buttons = '<div align="center"><input align="center" type="button"  class="btn btn-primary btn-lg" id="Start" value="התחלה" ><input align="center" type="button"  class="btn btn-primary btn-lg" id="Next" value="קדימה" >\n\
-<input align="center" type="button"  class="btn btn-primary btn-lg" id="Back" value="חזרה" ></div>';
-
-
-        $('#Bottom').html(Buttons);
-
-
-        if (PageNum === 1) {
-            $('#Back').hide();
-        }
-        ;
-        if (PageNum === NumPages) {
-            $('#Next').hide();
-        }
-        ;
-        if (PageNum < NumPages) {
-            $('#Start').hide();
-        }
-        ;
-
-
-        $('#Back').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            Instructions(PageNum - 1);
-
-        });
-        $('#Next').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            Instructions(PageNum + 1);
-
-        });
-        $('#Start').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-           
-             //Block(0);//Start with the first block
-            Block(0);
-                        
-
-        });
-    }
-    ;
-    
-    
-    
-    
-
-function SurveyComprehansion(){
-      console.log('SurveyDetails');
- 
-        $('#Top').css('height', thisHeight / 20);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-       // $('#Stage').css('width', DispWidth);
-        $('#Bottom').css('min-height', thisHeight / 20);  
-    
-       
-
-
-    
-    var JsonComp =  JSON.parse(JSON.stringify(CompJson));
-       console.log(JsonComp)
-/*$.ajax({
-    'async': false,
-    'global': false,
-    'url': "jsons/DemogJson.json",
-    'dataType': "json",
-    'success': function (data) {
-        console.log(JsonDetails)
-        JsonDetails = data;
-    }
-});
-    */
-
-    
-    var survey_comp = new Survey.Model(JsonComp);
-   console.log(survey_comp)
-    
-$("#Stage").Survey({
-    model: survey_comp,
-    onComplete: CheckComp
-});
-
-    
+    $('#nextPage').click(function() {
+        showInstructionsPage3(); // Go to Page 3
+    });
 }
-    
-    
-    
-    
-    function CheckComp(survey) {
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-           //send Ajax request to your web server.
-var answers=[survey.data]
 
-        console.log(answers)
-        var Answers=[5,5];
-      
-                  
-                 Answers[0]=answers[0]['question1'];
-               
-                 Answers[1]=answers[0]['question2'];
+// Show Instruction Page 3 (formerly Page 2)
+// Show Instruction Page 3 (formerly Page 2)
+function showInstructionsPage3() {
+    $('#Stage').empty();
+    $('#Stage').html(`
+        <H2 align="center" dir="rtl">הוראות</H2>
+        <p dir="rtl">לאחר כל בחירה שלכם תראו האם הצלחתם לדוג דג עסיסי או נכשלתם.</p>
+        <p dir="rtl">
+        <img src="images/Inst2.png" class="img-responsive center-block" style="max-width: 50%; margin: 20px auto;">
+        <button id="backPage" class="btn btn-secondary center-block">חזרה</button> 
+        <button id="startExperiment" class="btn btn-primary center-block">התחל ניסוי</button>
+    `);
+    
+    $('#backPage').click(function () {
+        showInstructionsPage2(); // Go back to Page 2
+    });
 
-        console.log(Answers)
-        
-        
-        
-if (Answers[0]==='1'){
-    if (Answers[1]==='4'){
-        Block(0);
-    }else{
-        StartAgain();
+    $('#startExperiment').click(function() {
+        Block(0); // Start the first block of the experiment directly after pressing "התחל ניסוי"
+    });
+}
+
+
+// Start with Name Input Page
+showNameInputPage();
+
+    // Generate trial sequence
+    function generateTrialSequence(blockNum) {
+        var sequence = [];
+        for (var i = 0; i < NumTrials; i++) {
+            var dyad = i % 2 === 0 ? 1 : 2; // Alternate dyads between 1 and 2
+            var probabilities = dyad === 1 ? Dyad1_Probabilities[blockNum] : Dyad2_Probabilities[blockNum];
+    
+            // Determine lakes based on the dyad and block
+            var lake1 = dyad === 1 ? LakeImage[0] : LakeImage[2]; // Dyad 1 uses Lake01, Dyad 2 uses Lake03
+            var lake2 = dyad === 1 ? LakeImage[1] : LakeImage[3]; // Dyad 1 uses Lake02, Dyad 2 uses Lake04
+    
+            // Randomize left/right positioning of the lakes
+            sequence.push({
+                dyad: dyad,
+                probabilities: probabilities,
+                leftLake: Math.random() < 0.5 ? lake1 : lake2,
+                rightLake: Math.random() < 0.5 ? lake2 : lake1
+            });
+        }
+        return sequence;
     }
-}else{
-        StartAgain();
+    
+
+    for (var blockNum = 0; blockNum < NumBlocks; blockNum++) {
+        TrialSequence.push(generateTrialSequence(blockNum));
     }
-    }
+
+    function showBreakPage(blockNum) {
+        $('#Stage').empty();
+        $('#Stage').html(`
+            <H2 align="center" dir="rtl">אתם עומדים להתחיל חופשה חדשה!</H2>
+            <p dir="rtl">סיימתם את חלק ${blockNum} מתוך ${NumBlocks}.</p>
+            <p dir="rtl">לחצו על הכפתור למטה כדי להמשיך לחלק הבא.</p>
+            <button id="startNextBlock" class="btn btn-primary center-block">התחל חלק ${blockNum + 1}</button>
+        `);
     
-    
-    
-     function StartAgain(){
-        
-           $('#Top').css('height', thisHeight / 20);
-       // $('#Stage').css('width', DispWidth);
-      //  $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-    
-        
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Title = '<div id = "Title"><H2 align = "center">Youmade a mistake in one of the comprehension questions, please read the instructions again.</H2></div>';
-        $('#TextBoxDiv').html(Title);
-         var Buttons = '<div align="center"><input align="center" type="button"  class="btn btn-primary" id="Start" value="Instructions" ></div>';
-
-        $('#Bottom').html(Buttons);
-        
-      $('#Start').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-           
-             Instructions(1);
-                        
-
+        $('#startNextBlock').click(function () {
+            var trials = TrialSequence[blockNum];
+            runTrials(trials, blockNum, 0); // Start the trials for the current block
         });
-
     }
-    
 
-    function Block(BlockNum){
-        
-           $('#Top').css('height', thisHeight / 20);
-       // $('#Stage').css('width', DispWidth);
-      //  $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-console.log('Block num:'+BlockNum)
-
-    
-console.log('Block Type:'+BlockOrder[BlockNum])
-        
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Title = '<div id = "Title"  dir = "rtl"><H2 align = "center">אתם עומדים להתחיל חופשה חדשה.</H2></div>';
-        $('#TextBoxDiv').html(Title);
-         var Buttons = '<div align="center"><input align="center" type="button"  class="btn btn-primary" id="Start" value="התחלה" ></div>';
-
-        $('#Bottom').html(Buttons);
-        
-      $('#Start').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-           var advicetrial=0
-           var askadvice=-1
-           var advice=-5
-             Options(BlockNum,0);//Start with the first block
-                        
-
-        });
-
-    }
-    
-    function Options(BlockNum,TrialNum) {
-
-
-        $('#Top').css('height', thisHeight / 20);
-        //$('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-  var  InitTime = (new Date()).getTime();
-
-     $('#Stage').append('<div class="row"> <div class="col-sm-3"></div>  <div id= "progressBarFrame" class="col-sm-6 nopadding"></div> </div>')
-   
-
-     $('#progressBarFrame').css({ "height": thisHeight / 32 + 'px', "background-color": "grey"});
-    $('#progressBarFrame').show();
-              var thisWidth = $('#progressBarFrame').width() ;
-
-    CreateDiv('progressBarFrame', 'progressBar');
-    $('#progressBar').css({"width": ((TrialNum+1) * thisWidth / (NumTrials)) + 'px', "height": thisHeight / 32 + 'px', "background-color": "#A4DE78"});
-
-    $('#progressBar').show();
-        
-        
-
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Title = '<div id = "Title"><H2 align = "center"  dir = "rtl">ביחרו אגם:</H2></div><div class="row" id = "choices" width = '+DispWidth/2+'> <div class="row">\n\
-                       <div class="col-sm-10 col-sm-offset-1">';
-
-         
-        
-        
-        var Door1 = '<img id = "Door1" src="images/'+LakeImage[LakeOrder[BlockOrder[BlockNum]]]+'.png" class="img-responsive center-block" >';
-        var Door2 = '<img id = "Door2" src="images/'+LakeImage[LakeOrder[BlockOrder[BlockNum]+4]]+'.png" class="img-responsive center-block" >';
-
-        
-          var Sum1 ='<div text = "center" align="center" dir = "rtl"><h3>'+LakeName[LakeOrder[BlockOrder[BlockNum]]]+'</h3></div>';
-        var Sum2 ='<div text = "center" align="center" dir = "rtl"><h3>'+LakeName[LakeOrder[BlockOrder[BlockNum]+4]]+'</h3></div>';
-
-      var RandPosition = Math.random();
-              //  var RandPosition = RandPos[BlockNum];
-
-        if (RandPosition < 0.5) {
-            if (ThisMobile===1){
-                    console.log('phone');
-                  var Images = '<div class="row"> <div id = "LeftImage"  width = "'+DispWidth/2+'px">' + Door1 + Sum1+'</div><div  id = "RightImage"  width = "'+DispWidth/2+'px">' + Door2 + Sum2+ '</div></div><br><div id = "Middle" ></div>';
-            }else{
-               var Images = '<div class="row" width = '+DispWidth+'> <div class="col-sm-4" id = "LeftImage">' + Door1 + Sum1+'</div><div id = "Middle" class="col-sm-4 nopadding" ></div><div class="col-sm-4" id = "RightImage" >' + Door2 + Sum2+ '</div></div>';  
-            }
-          
-           
+    function Block(blockNum) {
+        if (blockNum < NumBlocks) {
+            var trials = TrialSequence[blockNum];
+            runTrials(trials, blockNum, 0); // Start the trials immediately
         } else {
-           if (ThisMobile===1){
-                   console.log('phone');
-                  var Images = '<div class="row"> <div id = "LeftImage"  width = "'+DispWidth/2+'px">' + Door2 + Sum2+'</div><div  id = "RightImage"  width = "'+DispWidth/2+'px">' + Door1 + Sum1+ '</div></div><br><div id = "Middle" ></div>';
-            }else{
-               var Images = '<div class="row" width = '+DispWidth+'> <div class="col-sm-4" id = "LeftImage">' + Door2 + Sum2+'</div><div id = "Middle" class="col-sm-4 nopadding" ></div><div class="col-sm-4" id = "RightImage" >' + Door1 + Sum1+ '</div></div>';  
-            }
-          
+            End(); // End the experiment after Block 6
         }
-
-        $('#TextBoxDiv').html(Title + Images+ '</div></div>');
-
-        if (ThisMobile===1){
-                 $('Middle').css({"width": DispWidth/2 + 'px', height: DispWidth/2 + 'px'});
-        $('#LeftImage').css({"width": DispWidth/1.7 + 'px', "padding-right":'15px', "padding-left":'15px'});
-        $('#RightImage').css({"width": DispWidth/1.7 + 'px', "padding-right":'15px', "padding-left":'15px'});
-      $('#LeftImage').css({"float": 'left'});
-        $('#RightImage').css({"float":'left'});
-
-        
-        }
- 
-    
-        
-
-        var Press=0;
-        $('#Door1').click(function() {
-            if (Press===0){
-                Press=1;
-           
-            $(this).css({"border-color": "#CCFF33",
-                "border-width": "3px",
-                "border-style": "solid"});
-  var  ThisTime = (new Date()).getTime();
-            Reward(BlockNum,TrialNum, 1,Sign(RandPosition-0.5),BlockOrder[BlockNum],ThisTime-InitTime);
- }
-        });
-        $('#Door2').click(function() {
-            if (Press===0){
-                Press=1;
-            $(this).css({"border-color": "#CCFF33",
-                "border-width": "3px",
-                "border-style": "solid"});
-  var  ThisTime = (new Date()).getTime();
-            Reward(BlockNum,TrialNum, 2,Sign(0.5-RandPosition),BlockOrder[BlockNum]+3,ThisTime-InitTime);
-            }
-        });
-
     }
-
-    function Reward(BlockNum,TrialNum, Choice,Side,Lake,RT) {
-
-        $('#Title').empty();
-       
-       console.log('Lake '+ Lake)
-        var ThisReward = 0;
-        
-
-        
-        
-        
-        // ThisReward=Math.round(10*jStat.beta.sample( Alpha[BlockOrder[BlockNum]], Beta[BlockOrder[BlockNum]] ));
-        
-        var RandomNum = Math.random();
-        if (Choice === 1) {//Door1
-                         //ThisReward = Math.min(8,Math.max(2,Math.round((55 + (((Math.random() * 2 - 1) + (Math.random() * 2 - 1) + (Math.random() * 2 - 1)) * 17))/10)));
-            
-            if (Math.random()<p_fish_lake_1){
-            ThisReward = 1
-            }else{
-                ThisReward = 0
+    
+    
+    function checkLearningCondition() {
+        var blockIndex = 2; // Block 3 (zero-based index)
+        var blockTrials = TrialSequence[blockIndex]; // Get trials for Block 3
+    
+        var blockRewards = 0;
+        var blockAttempts = blockTrials.length; // Total trials in Block 3
+    
+        // Count successes in Block 3
+        for (var i = 0; i < blockAttempts; i++) {
+            if (blockTrials[i].wasRewarded) { // Make sure 'wasRewarded' is set properly in trials
+                blockRewards++;
             }
-        
-
-            //ThisReward=Math.round(10*jStat.beta.sample( Alpha[BlockOrder[BlockNum]], Beta[BlockOrder[BlockNum]] ));
-           // console.log('Beta:A : '+ Alpha[BlockOrder[BlockNum]]+', B: '+ Beta[BlockOrder[BlockNum]])
-               
-        } else {//Door2
-             //ThisReward = Math.min(8,Math.max(2,Math.round((40 + (((Math.random() * 2 - 1) + (Math.random() * 2 - 1) + (Math.random() * 2 - 1)) * 17))/10)));
-            //ThisReward=Math.round(10*jStat.beta.sample( Alpha[BlockOrder[BlockNum]+3], Beta[BlockOrder[BlockNum]+3] ));
-          //  console.log('Beta:A : '+ Alpha[BlockOrder[BlockNum]+3]+', B: '+ Beta[BlockOrder[BlockNum]+3])
-             if (Math.random()<p_fish_lake_2){
-            ThisReward = 1
-            }else{
-                ThisReward = 0
-            } 
         }
-        
-
-        SumReward = SumReward + ThisReward;
-        if (ThisReward == 1){
-            $('#Title').html('<H2 align = "center" dir = "rtl">הצלחת!</H2>');
-            $('#Middle').html('<img id = "Door1" src="images/fish.png" class="img-responsive center-block" width="150px" height="750px" >');
-        //CreateFishDisplay(ThisReward)
-        }else{
-             $('#Title').html('<H2 align = "center"   dir = "rtl">לא הצלחת היום.</H2>');
-         $('#Middle').html('<img id = "nothing" src="images/got_nothing.png" class="img-responsive center-block" width="100px" height="700px" >');
+    
+        // Calculate success rate after the loop
+        var successRate = (blockRewards / blockAttempts) * 100;
+    
+        console.log(`Block 3 Success Rate: ${successRate}%`);
+    
+        if (successRate < 70 && !extraTrialsAdded) {
+            console.log("Participant did not reach 70% success in Block 3. Adding 20 extra trials.");
+            extraTrialsAdded = true; // Set flag to prevent adding extra trials again
+            addExtraTrials();
+        } else {
+            console.log("Participant met the learning condition in Block 3. Moving to Block 4.");
+            Block(3); // Proceed to Block 4
         }
-                $('Middle').css({"width": DispWidth/4 + 'px', height: DispWidth/4 + 'px'});
+    }
+    
+    
+    
+    
+    // Function to add extra 20 trials before Block 4
+    function addExtraTrials() {
+        var extraTrials = generateTrialSequence(2).slice(0, 20); // Generate 20 additional trials from Block 3
+        runTrials(extraTrials, 2, 0, function () {
+            console.log("Extra trials completed. Moving to Block 4.");
+            Block(3);
+        });
+    }
+    
 
-           
-            InsertDataAjax(TrialNum,Choice,Side,RT,Lake,ThisReward,BlockNum)
-
-        
-       
-                if (TrialNum + 1 < NumTrials) {
-                setTimeout(function() {
-                    $('#TextBoxDiv').fadeOut(500);
-                    setTimeout(function() {
-                        $('#Stage').empty();
-                        $('#Bottom').empty();
-                        Options(BlockNum,TrialNum + 1,0,-1,-5);
-                    }, 500);
-                }, 1500);
+    function runTrials(trials, blockNum, trialIndex) {
+        // Check if it's time for an assessment
+        if (TrialCounter % 10 === 0 && TrialCounter !== 0 && !assessmentCompleted) {
+            console.log("Starting assessment pages...");
+            assessmentCompleted = true; // Set flag to prevent repeat assessments
+            showAssessmentPages(trials, blockNum, trialIndex);
+            return;
+        }
+    
+        // Reset the flag after assessment
+        if (TrialCounter % 10 !== 0) {
+            assessmentCompleted = false;
+        }
+    
+        // Check if all trials in the block are completed
+        if (trialIndex >= trials.length) {
+            console.log(`Block ${blockNum + 1} completed.`);
+            
+            if (blockNum === 2) { // ✅ Now we check the success rate AFTER Block 3 ends
+                checkLearningCondition();
+            } else if (blockNum + 1 < NumBlocks) {
+                Block(blockNum + 1);
             } else {
-                if (BlockNum + 1 < NumBlocks) {
-                setTimeout(function() {
-                    $('#TextBoxDiv').fadeOut(500);
-                    setTimeout(function() {
-                        $('#Stage').empty();
-                        $('#Bottom').empty();
-                        Block(BlockNum+1,0);
-                    }, 500);
-                }, 1500);
-            } else {
-                 setTimeout(function() {
-                    $('#TextBoxDiv').fadeOut(500);
-                    setTimeout(function() {
-                        $('#Stage').empty();
-                        $('#Bottom').empty();
-                         End();
-                    }, 500);
-                }, 1500);
-             
-
+                End();
             }
-            }
-            
-     
-    }
-    
-    
-    
-
-    function CreateFishDisplay(NumFish){
-     //   console.log('NumFish: '+NumFish)
-          //      console.log('Width: '+$('#Middle').width())
-
-        var NoFish=10-NumFish;
-        for (i=0;i<NumFish;i++){
-             CreateDiv('Middle', 'Fish' + i);
-         //   console.log('Fish '+i)
-                $('#Fish' + i).css('width',$('#Middle').width()/2.1);
-                $('#Fish' + i).css('float', 'left');
-              $('#Fish' + i).html('<img src="images/fish.png" class="img-responsive " >')
-             $('#Fish' + i).show()
+            return;
         }
         
-             /* for (i=0;i<NoFish;i++){
-             CreateDiv('Middle', 'NoFish' + i);
-                $('#NoFish' + i).css('width',  $('#Middle').width()/2);
-                $('#NoFish' + i).css('float', 'left');
-              $('#NoFish' + i).html('<img src="images/NoFish.png" class="img-responsive " >')
-        }*/
-        
+    
+        // Proceed with the trial
+        console.log(`Running trial ${trialIndex + 1} of Block ${blockNum + 1}`);
+        TrialCounter++; // Increment trial counter for every trial
+        var trial = trials[trialIndex];
+        Options(blockNum, trialIndex, trial); // Show trial options
     }
     
     
-    function InsertDataAjax(TrialNum,Choice,Side,RT,Lake,ThisReward,BlockNum){
-        console.log('Insert')
-          var  ThisTime = (new Date()).getTime()-Init;
-        
-      $.ajax({
-                type: 'POST',
-                data: {ID:SubID,TrialNum:TrialNum,Choice:Choice,Side:Side,Lake:Lake,Reward:ThisReward,RT:RT,Time:ThisTime,BlockNum:BlockNum},
-                async: false,
-                url: 'php/InsertTrialData.php',
-                dataType: 'json',
-                success: function(r) {
-                    if (r[0].ErrorNo > 0) {
-                        Error();
-                    } 
-                }, error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
+
+    function Options(blockNum, trialIndex, trial) {
+        $('#Stage').empty();
+        $('#Bottom').empty();
+    
+        // Define which two lakes appear in the trial
+        var lake1 = trial.dyad === 1 ? LakeImage[0] : LakeImage[2];
+        var lake2 = trial.dyad === 1 ? LakeImage[1] : LakeImage[3];
+    
+        // Assign images randomly to left/right
+        var leftLake = Math.random() < 0.5 ? lake1 : lake2;
+        var rightLake = leftLake === lake1 ? lake2 : lake1;
+    
+        // Store the lake images in the trial object
+        trial.leftLake = leftLake;
+        trial.rightLake = rightLake;
+    
+        var Title = '<H2 align="center" dir="rtl">בחרו אגם:</H2>';
+        var Images = `<div class="row">
+                        <div class="col-sm-6" id="LeftImage">
+                            <img id="Door1" src="images/${leftLake}.png" class="img-responsive center-block" style="width: 80%; height: auto;">
+                        </div>
+                        <div class="col-sm-6" id="RightImage">
+                            <img id="Door2" src="images/${rightLake}.png" class="img-responsive center-block" style="width: 80%; height: auto;">
+                        </div>
+                      </div>`;
+    
+        $('#Stage').html(Title + Images);
+    
+        $('#Door1').click(function () {
+            handleChoice(blockNum, trialIndex, trial.dyad, trial.leftLake);
+        });
+    
+        $('#Door2').click(function () {
+            handleChoice(blockNum, trialIndex, trial.dyad, trial.rightLake);
+        });
+    }
+    
+    
+    function handleChoice(blockNum, trialIndex, dyad, chosenLake) {
+        $('#Stage').empty();
+    
+        var probabilities = dyad === 1 ? Dyad1_Probabilities[blockNum] : Dyad2_Probabilities[blockNum];
+        var lakeIndex = (LakeImage.indexOf(chosenLake) % 2 === 0) ? 0 : 1; 
+        var probability = probabilities[lakeIndex];
+    
+        var reward = Math.random() < probability ? 1 : 0;
+        SumReward += reward;
+    
+        // ✅ Set wasRewarded property correctly
+        TrialSequence[blockNum][trialIndex].wasRewarded = reward === 1;
+    
+        var resultMessage = reward ? "הצלחת לדוג דג!" : "לא הצלחת היום.";
+        var resultImage = reward ? "images/fish.png" : "images/got_nothing.png";
+        var imageSize = reward ? "50%" : "20%";
+    
+        $('#Stage').html(`
+            <H2 align="center" dir="rtl">${resultMessage}</H2>
+            <img src="${resultImage}" class="img-responsive center-block" style="max-width: ${imageSize}; margin: 20px auto;">
+        `);
+    
+        setTimeout(function () {
+            runTrials(TrialSequence[blockNum], blockNum, trialIndex + 1);
+        }, 1500);
+    }
+    
+    
+    
+    
+    
+    // Show Assessment Pages for the participant to estimate probabilities
+    function showAssessmentPages(trials, blockNum, trialIndex) {
+        var lakes = [LakeImage[0], LakeImage[1], LakeImage[2], LakeImage[3]]; // Two from each dyad
+        var lakeNames = ["כוכב", "עפיפון", "בייגל", "טרק"]; // Corresponding lake names
+        var currentPage = 0; // Track the current page being shown
+    
+        // Function to display each lake
+        function showPage(pageIndex) {
+            $('#Stage').empty();
+            $('#Stage').html(`
+                <H2 align="center" dir="rtl">הערכת סיכויים</H2>
+                <p dir="rtl">מה הסיכוי לקבל דג באגם זה?</p>
+                <img src="images/${lakes[pageIndex]}.png" class="img-responsive center-block" style="max-width: 50%; margin: 20px auto;">
+                <p dir="rtl" align="center">${lakeNames[pageIndex]}</p>
+                <input type="range" id="probabilitySlider" min="0" max="100" value="50" step="1" style="width: 80%; margin: 20px auto;">
+                <p dir="rtl" align="center">הערכה: <span id="sliderValue">50%</span></p>
+                <button id="nextPage" class="btn btn-primary center-block">הבא</button>
+            `);
+    
+            // Update slider value dynamically
+            $('#probabilitySlider').on('input', function () {
+                $('#sliderValue').text($(this).val() + '%');
+            });
+    
+            // Handle next button click
+            $('#nextPage').off('click').on('click', function () {
+                // Save the response for the current lake
+                ParticipantResponses.push({
+                    lake: lakes[pageIndex],
+                    lakeName: lakeNames[pageIndex],
+                    probability: $('#probabilitySlider').val()
+                });
+    
+                // Check if all lakes have been assessed
+                if (pageIndex < lakes.length - 1) {
+                    showPage(pageIndex + 1); // Show the next lake
+                } else {
+                    // End assessment and return to the regular trial sequence
+                    runTrials(trials, blockNum, trialIndex);
                 }
             });
-        
+        }
+    
+        // Start showing pages from the first lake
+        showPage(currentPage);
     }
     
-    
-    
-    
-    
-    
-    
-        function AdviceDisplayPre(BlockNum,TrialNum ){
-             $('#Top').css('height', thisHeight / 20);
-      //  $('#Stage').css('width', DispWidth);
-       // $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-        
-        console.log('AdviceType'+BlockOrder[BlockNum])
-        
-        if (BlockOrder[BlockNum]>0){
-            
-            
-            switch (BlockOrder[BlockNum]) {
-            case 1:
-                var Info = '<H2 align=center>Do you want to ask for advice from a previous player?</H2>';
-                var Face=AdviserPic;
-                break;
-            case 2:
-                var Info = '<H2 align=center>Do you want to secretly observe a choice made by a previous player?</H2>';
-                var Face=NoAdviserPic;   
-                break;
-            case 3:
-                var Info = '<H2 align=center>Do you want to ask for advice from an Algorithmic player?</H2>';
-                var Face=AiAdviserPic;
-                break;
-            default:
-                var Info;
-                break;
-        }
-        ;
-       CreateDiv('Stage', 'TextBoxDiv');
-            var LeftSide='<div class="row"><div class="col-sm-4"><img id = "Door1" src="'+Face+'" class="img-responsive center-block" ></div>'
-            var RightSide='<div class="col-sm-8">'+Info+'</div></div>'
-        $('#TextBoxDiv').html(LeftSide+RightSide);
-
-       var Button =  '<div align="center">\n\
-<input class="btn btn-primary btn-lg" type="button" value="Yes" id = "btn_yes">\n\
-<input class="btn btn-primary btn-lg" type="button" value="No" id = "btn_no">\n\
-</div>';
-            
-            
-        $('#Bottom').html(Button);
-       
-
-        $('#btn_no').click(function() {
-            
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            
-            Options(BlockNum,TrialNum, 1,0,-5);
-        });
-            
-        $('#btn_yes').click(function() {
-            
-            var askadvice = 1
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            
-             AdviceDisplay(BlockNum,TrialNum );
-
-        });
-            
-        }
-        else{
-            AdviceDisplay(BlockNum,TrialNum );
-        }
-        
-    }
-    
-    function AdviceDisplay(BlockNum,TrialNum){
-             $('#Top').css('height', thisHeight / 20);
-      //  $('#Stage').css('width', DispWidth);
-      //  $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-        
-        console.log('AdviceType'+BlockOrder[BlockNum])
-        
-        if (BlockOrder[BlockNum]>0){
-            
-             if (Math.random ()< advice_Acc){
-                        
-                      var Acc=0
-                    }else{
-                                           var Acc=4
-                                           }
-            console.log('acc:'+Acc)
-            switch (BlockOrder[BlockNum]) {
-            case 1:
-                var Info = '<H2 align=center>The player advises you to go fish at Lake '+ LakeName[LakeOrder[BlockOrder[BlockNum]+Acc]]+'.</H2>';  
-                var Face=AdviserPic;
-                break;
-                    
-            case 2:
-                var Info =  '<H2 align=center>The player went fishing at Lake '+ LakeName[LakeOrder[BlockOrder[BlockNum]+Acc]]+'.</H2>';
-                var Face=NoAdviserPic;  
-                break;
-                    
-            case 3: 
-                var Info = '<H2 align=center>The Algorithmic player advises you to go fish at Lake '+ LakeName[LakeOrder[BlockOrder[BlockNum]+Acc]]+'.</H2>';
-                var Face=AiAdviserPic;
-                break;
-                    
-            default:
-                var Info;
-                break;
-        }
-        ;
-       CreateDiv('Stage', 'TextBoxDiv');
-            var LeftSide='<div class="row"><div class="col-sm-4"><img id = "Door1" src="'+Face+'" class="img-responsive center-block" ></div>'
-            var RightSide='<div class="col-sm-8">'+Info+'<div class="row"><div class="col-sm-3"></div>'
-            var LakeIm='<div class="col-sm-6"><img id = "Lake" src="images/'+LakeImage[LakeOrder[BlockOrder[BlockNum]+Acc]]+'.png" class="img-responsive center-block" ></div></div></div></div>'
-        $('#TextBoxDiv').html(LeftSide+RightSide+LakeIm);
-
-        var Buttons = '<div align="center">\n\
-<input align="center" type="button"  class="btn btn-primary" id="Next" value="Next" >\n\
-</div>';
-
-        $('#Bottom').html(Buttons);
-
-
-        $('#Next').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-            
-             Options(BlockNum,TrialNum,1,1,Acc );
-
-        });
-            
-        }
-        else{
-            Options(BlockNum,TrialNum, 0,-1,-5);
-        }
-        
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    function AfterQuestions(PageNum,Resp) { 
-
-
-        $('#Top').css('height', thisHeight / 20);
-        // $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-        CreateDiv('Stage', 'TextBoxDiv');
-            var numpages=1            
-       
-        switch (PageNum) {
-            case 1:
-                var Question = '<H2 align=center  dir = "rtl">עד כמה את.ה מרגיש.ה מוצפ.ת רגשית כרגע?</H2>'; 
-                break;
-        
-                    
-            default:
-                var Question;
-                break;
-        }
-        ;
-        
-
-        var Html1 = ' <div class="container">\n\
- <div class="col-sm-12 text-center">\n\
-</div></div>\n\
- <div class="row">\n\
-            <div class="col-sm-12 text-center">\n\
-                 <div class="row">\n\
-                       <div class="col-sm-10 col-sm-offset-1 text-left">\n\
-                                          '+ Question +'\n\
-<form data-toggle="validator" role="form" id="ConsentForm">\n\
- <div class="row"><div class="col-sm-4 col-sm-offset-4 text-center"><img id = "Door1" src="'+Face1+'" class="img-responsive center-block" width=60% ><H3>'+Option1+'</h3></div></div><div class="row"><div class="col-sm-6 col-sm-offset-3 text-center">\n\
-<div class="form-group">\n\
- \n\
-<div class="radio-inline">\n\
-   <label class="form-check-label" for="inlineRadio11"><input class="form-check-input " type="radio" name="inlineRadioOptions1" id="inlineRadio11" value="1" required>\n\
- Not at all</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
- <label class="form-check-label" for="inlineRadio21"> <input class="form-check-input" type="radio" name="inlineRadioOptions1" id="inlineRadio21" value="2" required>\n\
-  2</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio31"><input class="form-check-input" type="radio" name="inlineRadioOptions1" id="inlineRadio31" value="3" required>\n\
-  Somewhat</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio41"><input class="form-check-input" type="radio" name="inlineRadioOptions1" id="inlineRadio41" value="4" required>\n\
-  4</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio51"><input class="form-check-input" type="radio" name="inlineRadioOptions1" id="inlineRadio51" value="5" required>\n\
-  Very much</label>\n\
-</div> </div> </div>  </div>\n\
-     <div class="row"><div class="col-sm-4 col-sm-offset-4 text-center"><img id = "Door1" src="'+Face2+'" class="img-responsive center-block" width=60% ><H3>'+Option2+'</h3></div></div><div class="row"><div class="col-sm-6 col-sm-offset-3 text-center">\n\
-<div class="form-group">\n\
- \n\
-<div class="radio-inline">\n\
-   <label class="form-check-label" for="inlineRadio12"><input class="form-check-input " type="radio" name="inlineRadioOptions2" id="inlineRadio12" value="1" required>\n\
- Not at all</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
- <label class="form-check-label" for="inlineRadio22"> <input class="form-check-input" type="radio" name="inlineRadioOptions2" id="inlineRadio22" value="2" required>\n\
-  2</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio32"><input class="form-check-input" type="radio" name="inlineRadioOptions2" id="inlineRadio32" value="3" required>\n\
-  Somewhat</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio42"><input class="form-check-input" type="radio" name="inlineRadioOptions2" id="inlineRadio42" value="4" required>\n\
-  4</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio52"><input class="form-check-input" type="radio" name="inlineRadioOptions2" id="inlineRadio52" value="5" required>\n\
-  Very much</label>\n\
-</div> </div> </div>  </div>\n\
-    <div class="row"><div class="col-sm-4 col-sm-offset-4 text-center"><img id = "Door1" src="'+Face3+'" class="img-responsive center-block" width=60% ><H3>'+Option3+'</h3></div></div><div class="row"><div class="col-sm-6 col-sm-offset-3 text-center">\n\
-<div class="form-group">\n\
- \n\
-<div class="radio-inline">\n\
-   <label class="form-check-label" for="inlineRadio13"><input class="form-check-input " type="radio" name="inlineRadioOptions4" id="inlineRadio13" value="1" required>\n\
- Not at all</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
- <label class="form-check-label" for="inlineRadio23"> <input class="form-check-input" type="radio" name="inlineRadioOptions4" id="inlineRadio23" value="2" required>\n\
-  2</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio33"><input class="form-check-input" type="radio" name="inlineRadioOptions4" id="inlineRadio33" value="3" required>\n\
-  Somewhat</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio43"><input class="form-check-input" type="radio" name="inlineRadioOptions4" id="inlineRadio43" value="4" required>\n\
-  4</label>\n\
-</div>\n\
-<div class="radio-inline">\n\
-  <label class="form-check-label" for="inlineRadio53"><input class="form-check-input" type="radio" name="inlineRadioOptions4" id="inlineRadio53" value="5" required>\n\
-  Very much</label>\n\
-</div> </div> </div>  </div>\n\
-<div class="form-group col-sm-12" align="center">\n\
-    <button type="submit" class="btn btn-primary btn-lg">Submit</button>\n\
-  </div>\n\
-        </div>\n\
-                       </div>\n\
-            </div>\n\
-        </div></div>';
-
-
-        $('#TextBoxDiv').html(Html1);
-
-
-        var form = document.getElementById('ConsentForm');
-        if (form.attachEvent) {
-            form.attachEvent("submit", processForm);
-        } else {
-            form.addEventListener("submit", processForm);
-        }
-
-        function processForm(e) {
-            if (e.preventDefault)
-                e.preventDefault();
-
-            var ThusForm = document.getElementById('ConsentForm');
-        console.log(ThusForm.elements)
-
-            var Q3answer = 0;
-            // var thisContact = ThusForm.elements[6].value;
-         var Q1answer = 0
-            var Q2answer = 0
-         
-         
-            for (i = 0; i < 5; i++) {
-    if (ThusForm.elements[i].checked) {
-      Q1answer = ThusForm.elements[i].value;
-    }
-  }
-            
-            
-           for (i = 5; i < 10; i++) {
-    if (ThusForm.elements[i].checked) {
-      Q2answer = ThusForm.elements[i].value;
-    }
-  }  
-               for (i = 10; i < 15; i++) {
-    if (ThusForm.elements[i].checked) {
-      Q3answer = ThusForm.elements[i].value;
-    }
-  }     
-           
-     
-            
-                     Resp=Resp+','+Q1answer+','+Q2answer+','+Q3answer   
-console.log(Q1answer)
-            console.log(Q2answer)
-
-            console.log(Q3answer)
-  console.log(Resp)
-            if (PageNum<numpages){
-                AfterQuestions(PageNum+1,Resp)
-            }else{
-                $('#TextBoxDiv').remove();
-            $('#CheckAlert').remove();
-            $('#Stage').empty();
-            // SurveyPageDetails();
-            $.ajax({
-                type: 'POST',
-                data: {
-                    ID: thisCode,
-                    Responses: Resp
-                },
-                async: false,
-                url: 'php/InsertQuestData.php',
-                dataType: 'json',
-                success: function (r) {
-                    //alert(r)
-                    if (r[0].ErrorNo > 0) {
-
-                        Duplicate();
-                    } else {
-                        End();
-                    };
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
-                }
-            }); 
-            }
-           
-
-
-            return false;
-        }
- }
-
-
-      
-    
-        
-        
-        
-    function QuestIntro(){
-        
-           $('#Top').css('height', thisHeight / 20);
-      //  $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-
-    
-
-        CreateDiv('Stage', 'TextBoxDiv');
-
-        var Title = '<div id = "Title"><H2 align = "center">You have completed all four parts of the fishing game. <br> You will now be directed to a short questionnaire.<br>It make take a few seconds for the questionnaire to load.</H2></div>';
-        $('#TextBoxDiv').html(Title);
-         var Buttons = '<div align="center"><input align="center" type="button"  class="btn btn-primary" id="Start" value="Start!" ></div>';
-
-        $('#Bottom').html(Buttons);
-        
-      $('#Start').click(function() {
-
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-            $('#Bottom').empty();
-           
-             SurveyPageQuest();//Start with the first block
-                        
-
-        });
-
-    }
-    
-    
-    
-    
-function SurveyPageQuest(){
-      console.log('SurveyQuest');
- 
-        $('#Top').css('height', thisHeight / 20);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-       // $('#Stage').css('width', DispWidth);
-        $('#Bottom').css('min-height', thisHeight / 20);  
-    
-       
-
-
-    
-    var JsonDetails =  JSON.parse(JSON.stringify(DemogJson));
-       console.log(JsonQuest)
-/*$.ajax({
-    'async': false,
-    'global': false,
-    'url': "jsons/DemogJson.json",
-    'dataType': "json",
-    'success': function (data) {
-        console.log(JsonDetails)
-        JsonDetails = data;
-    }
-});
-    */
-
-    
-    var survey_quest = new Survey.Model(JsonQuest);
-    
-$("#Stage").Survey({
-    model: survey_quest,
-    onComplete: InsertQuest
-});
-
-    
-}
-    
-    
-    
-    
-    function InsertQuest(survey) {
-            $('#TextBoxDiv').remove();
-            $('#Stage').empty();
-           //send Ajax request to your web server.
-var Json1=[survey.data]
-
-var csv = ConvertToCSV_quest(Json1)
-
-console.log("The results are:" +csv)
-      //InstructionsJigsaw(1);
-
-    $.ajax({
-                type: 'POST',
-                data: {ID:SubID,Responses:csv},
-                async: false,
-                url: 'php/InsertQuestData.php',
-                dataType: 'json',
-                success: function(r) {
-                    if (r[0].ErrorNo > 0) {
-                        Error();
-                    } else {
-                        $('#Stage').empty();
-            $('#Bottom').empty();
-                      InstructionsJigsaw(1);
-                           
-                    }
-                    ;
-                }, error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
-                }
-            });
-
-    }
-    
-    
-    
-        
+    // Show Ending Page
     function End() {
+        $('#Stage').empty();
+        $('#Stage').html(`
+            <H2 align="center" dir="rtl">Finish</H2>
+            <p dir="rtl">סיימתם את המטלה!</p>
+            <p dir="rtl">תודה על השתתפותכם! דגתם ${SumReward} דגים בסך הכל.</p>
+        `);
 
-
-        $('#Top').css('height', thisHeight / 20);
-     //   $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-        
-       InsertFinishedAjax()
-        CreateDiv('Stage', 'TextBoxDiv');
-var Bonus = 0.01*SumReward;
-        var Title = '<h2 align = "center"  dir = "rtl">תודה רבה, סיימת את מטלת הדגים!<br> <br> הצלחת לדוג '+SumReward+' דגים!<br>המון תודה! סיימת את החלק הראשון של שלב זה במחקר. אנא שלח.י לנו בווצאפ למספר 055-301-5600 צילום מסך של דף זה שנדע שסיימת ונעביר לך תשלום על סך 60 ש"ח. <br><br>במידה וסימנת שתרצה.י לענות על השלב השני של השאלונים מיד (בתוספת 60 ש"ח נוספים)- את.ה מוזמן.ת להיכנס <a href = "https://haifauniversity.qualtrics.com/jfe/form/SV_6YEMRPX3lsLgqKG" target="_blank">ללינק לשאלונים</a>. הלינק תקף למשך 4 ימים.<br><br>במידה ותרצה לענות בהמשך נשלח לך את הלינק בהודעה נפרדת.';
-               
-        $('#TextBoxDiv').html(Title );
-
-   /*
-        
-      $('#myButton').click(function() {
-           
-             location.href = 'https://app.prolific.co/submissions/complete?cc=76A1A900';                        
-
-        });*/
-        
-
-
-       
-    }
-    ;
-
-function MobileNotice() {
-
-        $('#Top').css('height', thisHeight / 20);
-     //   $('#Stage').css('width', DispWidth);
-        $('#Stage').css('min-height', thisHeight * 17 / 20);
-        $('#Bottom').css('min-height', thisHeight / 20);
-        
-        CreateDiv('Stage', 'TextBoxDiv');
-        var Title = '<h3 align = "center">You seem to try to perform the experiment on your phone. <br> <br> This experiment does not display well on phones. Please try again using a desktop or a laptop. <br><h1 align = "center">Thank you!</h3>';
-
-        $('#TextBoxDiv').html(Title );
-
-console.log('here')
-       
-    }
-    ;
-   
-
-    
-    function InsertFinishedAjax(){
-          
-
-      $.ajax({
-                type: 'POST',
-                data: {ID:SubID,Worker:thisCode,SumReward:SumReward},
-                async: false,
-                url: 'php/FinishCode.php',
-                dataType: 'json',
-                success: function(r) {
-                    if (r[0].ErrorNo > 0) {
-                        Error();
-                    } 
-                }, error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    alert("Status: " + textStatus);
-                    alert("Error: " + errorThrown);
-                }
-            });
-      
+        // Export ParticipantResponses to the server
+        $.ajax({
+            type: "POST",
+            url: "server_endpoint_url", // Replace with your server endpoint
+            data: JSON.stringify({ responses: ParticipantResponses }),
+            contentType: "application/json",
+            success: function() {
+                console.log("Responses successfully sent to the server.");
+            },
+            error: function() {
+                console.error("Failed to send responses to the server.");
+            }
+        });
     }
 
-    //Utility Functions
     function CreateCode() {
         return Math.floor(Math.random() * 10000000000);
     }
-    ;
 
-    function Sign(x) {
-        return x > 0 ? 1 : x < 0 ? -1 : 0;
-    };
-
-    function CreateDiv(ParentID, ChildID) {
-
-        var d = $(document.createElement('div'))
-                .attr("id", ChildID);
-        var container = document.getElementById(ParentID);
-
-        d.appendTo(container);
-    }
-    ;
-    
-    function Shuffle(array) {
-
-        var currentIndex = array.length
-                , temporaryValue
-                , randomIndex
-                ;
-
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-
-            // Pick a remaining element...
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-
-            // And swap it with the current element.
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
-        }
-
-        return array;
-    }
-    ;
-
-    
+    showNameInputPage(); // Start with Instruction Page 1
 });
-
